@@ -1,7 +1,8 @@
 # coding: utf-8
 
-import socket
 import threading
+import signal
+import socket
 import os
 
 is_quit_requested = False
@@ -80,7 +81,6 @@ if channel != "":
 def print_irc_messages():
     while is_quit_requested == False:
         irc_message = irc.recv(2048).decode('UTF-8', 'ignore')
-        irc_message.strip('\n\r')
         print(irc_message)
 
 def user_input():
@@ -88,7 +88,7 @@ def user_input():
     global is_quit_requested
 
     while is_quit_requested == False:
-        message_to_send = input()
+        message_to_send = input("")
 
         if len(message_to_send) == 0: # Ne pas faire la vérification ferait un IndexError
             continue # On passe ce tour de boucle
@@ -107,9 +107,12 @@ def user_input():
 
             send_message(message_to_send, False)
         
-        elif message_to_send[0] == 'Z' and message_to_send[1] == '/': # Si c'est une commande propre au client
+        elif message_to_send.startswith('Z/'): # Si c'est une commande propre au client
             if message_to_send.find('Z/clear') != -1:
-                os.system('cls') # Windows only mais on verra ça plus tard
+                cmd = 'cls'
+                if os.name == 'posix':
+                    cmd = 'clear'
+                os.system(cmd)
             
         else: # Si c'est un message standard
             send_message("PRIVMSG {} {}".format(channel, message_to_send), False)
